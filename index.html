@@ -343,39 +343,26 @@
          * Función que maneja el ID NFC leído/simulado
          * @param {string} serialNumber El ID NFC de la tarjeta (UID/Serial Number)
          */
+       /**
+         * Función que maneja el ID NFC leído/simulado
+         * @param {string} serialNumber El ID NFC de la tarjeta (UID/Serial Number)
+         */
         function handleNFCRead(serialNumber) {
+            // *** LÍNEA AÑADIDA PARA DIAGNÓSTICO: MUESTRA SIEMPRE LO QUE LEE ***
+            console.log('ID LEÍDO POR EL NAVEGADOR:', serialNumber); 
+            // *****************************************************************
+            
             const nfcIdKey = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
             const product = productsDB[nfcIdKey];
 
             if (product) {
-                // Producto encontrado (Auténtico)
+                // ... (El código de PRODUCTO AUTÉNTICO)
                 showStatus('status', '✅ Producto Auténtico Verificado', 'success');
-                productInfoTitle.textContent = '✅ PRODUCTO AUTÉNTICO';
-                productInfoTitle.style.color = '#2e7d32';
-                productInfo.style.borderColor = '#4caf50';
-                productInfo.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
-
-                displayProductInfo(product);
+                // ... (resto del código de éxito)
             } else {
-                // Producto NO encontrado (Falso/No Registrado)
-                
-                // **** AQUÍ ESTÁ EL CAMBIO SOLICITADO ****
-                
+                // ... (El código de WARNING)
                 showStatus('status', '⚠️ WARNING: The tag is NOT authentic', 'error');
-                
-                productInfoTitle.textContent = '❌ WARNING: The tag is NOT authentic';
-                productInfoTitle.style.color = '#721c24'; // Color de error
-                productInfo.style.borderColor = '#dc3545'; // Borde rojo
-                productInfo.style.background = 'linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%)'; // Fondo de error
-
-                displayProductInfo({ 
-                    nfcId: nfcIdKey, 
-                    name: 'NO ENCONTRADO', 
-                    brand: 'DESCONOCIDO', 
-                    model: 'N/A', 
-                    price: 'N/A',
-                    verificationDate: new Date().toLocaleString('es-ES')
-                });
+                // ... (resto del código de error)
             }
 
             resetScanButton();
@@ -409,4 +396,5 @@
 </body>
 
 </html>
+
 
