@@ -14,9 +14,22 @@
         "model": "Elegance Pro",
         "price": "499.99€",
         "description": "Edición limitada"
-    }
-
-
+    },
+    "CD:F4:9A:EA": {
+        "nfcId": "CD:F4:9A:EA",
+        "name": "Reloj de Lujo",
+        "brand": "Watches Inc.",
+        "model": "Edición Especial",
+        "price": "1.250€",
+        "description": "Reloj cronógrafo de acero inoxidable."
+    },
    
+    "04:MC:FI:T1:23:45:00": { 
+        "nfcId": "04:MC:FI:T1:23:45:00",
+        "name": "Tarjeta Personal",
+        "brand": "McFit",
+        "model": "Mifare Classic 1k ISO 14443-3A",
+        "price": "10 euros",
+        "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
+    }
 }
-
