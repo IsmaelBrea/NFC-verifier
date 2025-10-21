@@ -1,0 +1,19 @@
+{
+    "04:E1:23:45:67:89:00": {
+        "nfcId": "04:E1:23:45:67:89:00",
+        "name": "Bolso Premium",
+        "brand": "Bolsalia",
+        "model": "Clásico 2024",
+        "price": "299.99€",
+        "description": "Bolso de cuero genuino"
+    },
+    "04:A2:B3:C4:D5:E6:F7": {
+        "nfcId": "04:A2:B3:C4:D5:E6:F7",
+        "name": "Bolso Deluxe",
+        "brand": "Bolsalia",
+        "model": "Elegance Pro",
+        "price": "499.99€",
+        "description": "Edición limitada"
+    }
+   
+}
