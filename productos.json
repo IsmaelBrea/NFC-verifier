@@ -17,7 +17,6 @@
     },
     "CD:F4:9A:EA": {
         "nfcId": "CD:F4:9A:EA",
-        "nfcId": "04:MC:FI:T1:23:45:00",
         "name": "Tarjeta Personal",
         "brand": "McFit",
         "model": "Mifare Classic 1k ISO 14443-3A",
