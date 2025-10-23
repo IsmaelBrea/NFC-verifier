@@ -364,7 +364,7 @@
                 console.log('✅ Base de datos cargada correctamente');
             } catch (error) {
                 console.error('❌ Error cargando la base de datos:', error);
-                productsDB = {};
+                productsDB = {}; // Base de datos vacía si hay error
             }
         }
 
@@ -402,9 +402,12 @@
 
             for (let format of formatsToTry) {
                 if (productsDB[format]) {
+                    console.log('✅ Producto encontrado:', format);
                     return productsDB[format];
                 }
             }
+            
+            console.log('❌ Producto NO encontrado:', nfcId);
             return null;
         }
 
@@ -438,7 +441,7 @@
                 const ndef = new NDEFReader();
                 await ndef.scan();
 
-                // Timeout de 10 segundos
+                // Timeout de 10 segundos - SOLO VUELVE SILENCIOSAMENTE SI NO SE DETECTA NADA
                 scanTimeout = setTimeout(() => {
                     console.log('⏰ Timeout - No se detectó NFC');
                     clearScanning();
@@ -455,49 +458,31 @@
 
                 ndef.onreadingerror = () => {
                     clearScanning();
+                    console.log('❌ Error leyendo NFC');
                     showScanning(false);
                     resetScanButton();
                 };
 
             } catch (error) {
                 clearScanning();
+                console.log('❌ Error en escaneo:', error);
                 showScanning(false);
                 resetScanButton();
             }
         }
 
-        // Procesar el tag NFC - VERSIÓN QUE SÍ FUNCIONABA
+        // Procesar el tag NFC
         function processNFCTag(serialNumber) {
             showScanning(false);
             
-            const nfcIdKey = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
-            const product = productsDB[nfcIdKey];
-
-            console.log('Buscando:', nfcIdKey, 'Encontrado:', !!product);
-
+            const product = findProduct(serialNumber);
+            
             if (product) {
-                // PRODUCTO AUTÉNTICO
-                showStatus('✅ Producto Auténtico Verificado', 'success');
-                productInfoTitle.textContent = '✅ PRODUCTO AUTÉNTICO';
-                productInfoTitle.style.color = '#2e7d32';
-                displayProductInfo(product);
+                showResult(true, product, serialNumber);
             } else {
-                // PRODUCTO NO AUTÉNTICO
-                showStatus('❌ PRODUCTO NO AUTÉNTICO', 'error');
-                productInfoTitle.textContent = '❌ PRODUCTO NO AUTÉNTICO';
-                productInfoTitle.style.color = '#dc3545';
-                
-                document.getElementById('nfcId').textContent = nfcIdKey;
-                document.getElementById('productName').textContent = 'NO REGISTRADO';
-                document.getElementById('productBrand').textContent = 'NO REGISTRADO';
-                document.getElementById('productModel').textContent = 'NO REGISTRADO';
-                document.getElementById('productPrice').textContent = 'NO REGISTRADO';
-                document.getElementById('verificationDate').textContent = new Date().toLocaleString('es-ES');
-                
-                productInfo.classList.add('show');
+                // TARJETA FALSA - MOSTRAR MODAL DE ERROR
+                showResult(false, null, serialNumber);
             }
-
-            resetScanButton();
         }
 
         // Mostrar overlay de escaneando
@@ -510,7 +495,7 @@
             }
         }
 
-        // Mostrar resultado en modal - VERSIÓN SIMPLE QUE FUNCIONABA
+        // Mostrar resultado en modal
         function showResult(isAuthentic, product, nfcId) {
             if (isAuthentic) {
                 // PRODUCTO AUTÉNTICO
@@ -519,6 +504,7 @@
                 modalTitle.textContent = 'PRODUCTO AUTÉNTICO';
                 modalSubtitle.textContent = 'Verificación exitosa';
                 
+                // Llenar información del producto
                 productInfo.innerHTML = `
                     <div class="info-item">
                         <span class="info-label">🏷️ ID NFC:</span>
@@ -550,7 +536,7 @@
                     </div>
                 `;
             } else {
-                // PRODUCTO NO AUTÉNTICO
+                // PRODUCTO NO AUTÉNTICO - MOSTRAR ERROR
                 modalHeader.className = 'modal-header error';
                 modalIcon.textContent = '❌';
                 modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
@@ -572,7 +558,6 @@
                 `;
             }
             
-            // ESTA ES LA LÍNEA CLAVE QUE FALTABA
             resultModal.classList.add('show');
         }
 
@@ -584,6 +569,7 @@
 
         // Event Listeners
         scanButton.addEventListener('click', async () => {
+            // Asegurarse de que la base de datos esté cargada
             if (Object.keys(productsDB).length === 0) {
                 await loadDatabase();
             }
@@ -598,6 +584,7 @@
             resetScanButton();
         });
 
+        // Cerrar modal al hacer clic fuera
         resultModal.addEventListener('click', (e) => {
             if (e.target === resultModal) {
                 resultModal.classList.remove('show');
@@ -605,10 +592,9 @@
             }
         });
 
-        // Inicializar
+        // Inicializar - Cargar base de datos al inicio
         loadDatabase();
         checkCompatibility();
     </script>
 </body>
 </html>
-
