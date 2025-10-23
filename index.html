@@ -82,22 +82,39 @@
             margin: 20px 0;
         }
 
-        .scan-button:hover {
+        .scan-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
 
         .scan-button:disabled {
-            background: #ccc;
+            background: #6c757d;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
+            opacity: 0.7;
         }
 
         .scan-hint {
             color: #666;
             font-size: 14px;
             margin-top: 10px;
+        }
+
+        .compatibility-warning {
+            display: none;
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .compatibility-warning strong {
+            display: block;
+            margin-bottom: 5px;
         }
 
         /* MODAL DE RESULTADO */
@@ -265,6 +282,12 @@
         .scanning-text {
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .scanning-timer {
+            font-size: 14px;
+            opacity: 0.7;
         }
     </style>
 </head>
@@ -288,6 +311,11 @@
             <div class="scan-hint">
                 Acerca su dispositivo a la etiqueta NFC del producto
             </div>
+
+            <div class="compatibility-warning" id="compatibilityWarning">
+                <strong>⚠️ NFC No Compatible</strong>
+                Su navegador o dispositivo no soporta el escaneo NFC. Esta función requiere un dispositivo Android con Chrome o Edge.
+            </div>
         </div>
     </div>
 
@@ -295,6 +323,7 @@
     <div class="scanning-overlay" id="scanningOverlay">
         <div class="scanning-animation"></div>
         <div class="scanning-text">Escaneando...</div>
+        <div class="scanning-timer" id="scanningTimer">Esperando etiqueta NFC...</div>
     </div>
 
     <!-- Modal de resultado -->
@@ -324,6 +353,7 @@
         // Elementos del DOM
         const scanButton = document.getElementById('scanButton');
         const scanningOverlay = document.getElementById('scanningOverlay');
+        const scanningTimer = document.getElementById('scanningTimer');
         const resultModal = document.getElementById('resultModal');
         const modalHeader = document.getElementById('modalHeader');
         const modalIcon = document.getElementById('modalIcon');
@@ -331,6 +361,12 @@
         const modalSubtitle = document.getElementById('modalSubtitle');
         const productInfo = document.getElementById('productInfo');
         const closeButton = document.getElementById('closeButton');
+        const compatibilityWarning = document.getElementById('compatibilityWarning');
+
+        // Variables para el timeout
+        let scanTimeout = null;
+        let timerInterval = null;
+        let ndefReader = null;
 
         // Cargar base de datos desde JSON externo
         async function loadDatabase() {
@@ -360,8 +396,10 @@
         // Verificar compatibilidad
         function checkCompatibility() {
             if (!('NDEFReader' in window)) {
-                scanButton.innerHTML = '🧪 Modo Demo (Probar Función)';
-                scanButton.style.background = '#28a745';
+                scanButton.disabled = true;
+                scanButton.style.background = '#6c757d';
+                scanButton.innerHTML = '❌ NFC No Soportado';
+                compatibilityWarning.style.display = 'block';
                 return false;
             }
             return true;
@@ -398,52 +436,69 @@
             return null;
         }
 
+        // Iniciar temporizador visual
+        function startTimer(seconds) {
+            let remaining = seconds;
+            scanningTimer.textContent = `Tiempo restante: ${remaining}s`;
+            
+            timerInterval = setInterval(() => {
+                remaining--;
+                if (remaining > 0) {
+                    scanningTimer.textContent = `Tiempo restante: ${remaining}s`;
+                } else {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        // Detener temporizador
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            if (scanTimeout) {
+                clearTimeout(scanTimeout);
+                scanTimeout = null;
+            }
+        }
+
         // Iniciar escaneo NFC real
         async function startRealScan() {
             try {
                 showScanning(true);
+                startTimer(10);
                 
-                const ndef = new NDEFReader();
-                await ndef.scan();
+                ndefReader = new NDEFReader();
+                await ndefReader.scan();
 
-                ndef.onreading = (event) => {
+                ndefReader.onreading = (event) => {
                     const serialNumber = event.serialNumber;
                     console.log('📱 NFC detectado:', serialNumber);
+                    stopTimer();
                     processNFCTag(serialNumber);
                 };
 
-                ndef.onreadingerror = () => {
+                ndefReader.onreadingerror = () => {
+                    stopTimer();
                     showResult(false, "Error al leer la etiqueta NFC");
                 };
 
-                // Timeout después de 15 segundos
-                setTimeout(() => {
+                // Timeout de 10 segundos
+                scanTimeout = setTimeout(() => {
                     if (scanningOverlay.classList.contains('show')) {
+                        stopTimer();
                         showScanning(false);
-                        showResult(false, "No se detectó ninguna etiqueta NFC");
+                        console.log('⏱️ Timeout: No se detectó ninguna etiqueta');
+                        // Volver a la pantalla principal sin mostrar error
                     }
-                }, 15000);
+                }, 10000);
 
             } catch (error) {
+                stopTimer();
                 showScanning(false);
                 showResult(false, "Error: " + error.message);
             }
-        }
-
-        // Modo demo para navegadores sin soporte NFC
-        function startDemoScan() {
-            showScanning(true);
-            
-            setTimeout(() => {
-                // En demo, probamos con un ID aleatorio de la base de datos
-                const ids = Object.keys(productsDB);
-                if (ids.length > 0) {
-                    const randomId = ids[Math.floor(Math.random() * ids.length)];
-                    processNFCTag(randomId);
-                } else {
-                    processNFCTag("CD:F4:9A:EA");
-                }
-            }, 2000);
         }
 
         // Procesar el tag NFC
@@ -465,6 +520,7 @@
                 scanningOverlay.classList.add('show');
             } else {
                 scanningOverlay.classList.remove('show');
+                scanningTimer.textContent = 'Esperando etiqueta NFC...';
             }
         }
 
@@ -536,16 +592,17 @@
 
         // Event Listeners
         scanButton.addEventListener('click', async () => {
+            // Solo funciona si NFC está soportado
+            if (!checkCompatibility()) {
+                return;
+            }
+
             // Asegurarse de que la base de datos esté cargada
             if (Object.keys(productsDB).length === 0) {
                 await loadDatabase();
             }
             
-            if ('NDEFReader' in window) {
-                startRealScan();
-            } else {
-                startDemoScan();
-            }
+            startRealScan();
         });
 
         closeButton.addEventListener('click', () => {
@@ -559,7 +616,7 @@
             }
         });
 
-        // Inicializar - Cargar base de datos al inicio
+        // Inicializar - Cargar base de datos al inicio y verificar compatibilidad
         loadDatabase();
         checkCompatibility();
     </script>
