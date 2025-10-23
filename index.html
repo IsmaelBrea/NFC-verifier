@@ -606,6 +606,11 @@
         });
 
         closeButton.addEventListener('click', () => {
+            // Detener cualquier escaneo en curso
+            stopTimer();
+            showScanning(false);
+            
+            // Cerrar el modal
             resultModal.classList.remove('show');
         });
 
