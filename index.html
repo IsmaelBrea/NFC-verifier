@@ -1,82 +1,594 @@
-{
-    "04:E1:23:45:67:89:00": {
-        "nfcId": "04:E1:23:45:67:89:00",
-        "name": "Bolso Premium",
-        "brand": "Bolsalia",
-        "model": "Clásico 2024",
-        "price": "299.99€",
-        "description": "Bolso de cuero genuino"
-    },
-    "04:A2:B3:C4:D5:E6:F7": {
-        "nfcId": "04:A2:B3:C4:D5:E6:F7",
-        "name": "Bolso Deluxe",
-        "brand": "Bolsalia",
-        "model": "Elegance Pro",
-        "price": "499.99€",
-        "description": "Edición limitada"
-    },
-    "CD:F4:9A:EA": {
-        "nfcId": "CD:F4:9A:EA",
-        "name": "Tarjeta Personal",
-        "brand": "McFit",
-        "model": "Mifare Classic 1k ISO 14443-3A",
-        "price": "10 euros",
-        "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-    },
-    "04:MC:FI:T1:23:45:00": {
-        "nfcId": "04:MC:FI:T1:23:45:00",
-        "name": "Producto Especial",
-        "brand": "Marca Exclusiva",
-        "model": "Edición Limitada",
-        "price": "199.99€",
-        "description": "Producto de alta gama con certificación NFC"
-    },
-    "04E12345678900": {
-        "nfcId": "04:E1:23:45:67:89:00",
-        "name": "Bolso Premium",
-        "brand": "Bolsalia",
-        "model": "Clásico 2024",
-        "price": "299.99€",
-        "description": "Bolso de cuero genuino"
-    },
-    "04A2B3C4D5E6F7": {
-        "nfcId": "04:A2:B3:C4:D5:E6:F7",
-        "name": "Bolso Deluxe",
-        "brand": "Bolsalia",
-        "model": "Elegance Pro",
-        "price": "499.99€",
-        "description": "Edición limitada"
-    },
-    "CDF49AEA": {
-        "nfcId": "CD:F4:9A:EA",
-        "name": "Tarjeta Personal",
-        "brand": "McFit",
-        "model": "Mifare Classic 1k ISO 14443-3A",
-        "price": "10 euros",
-        "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-    },
-    "04MCFIT1234500": {
-        "nfcId": "04:MC:FI:T1:23:45:00",
-        "name": "Producto Especial",
-        "brand": "Marca Exclusiva",
-        "model": "Edición Limitada",
-        "price": "199.99€",
-        "description": "Producto de alta gama con certificación NFC"
-    },
-    "cd:f4:9a:ea": {
-        "nfcId": "CD:F4:9A:EA",
-        "name": "Tarjeta Personal",
-        "brand": "McFit",
-        "model": "Mifare Classic 1k ISO 14443-3A",
-        "price": "10 euros",
-        "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-    },
-    "cdf49aea": {
-        "nfcId": "CD:F4:9A:EA",
-        "name": "Tarjeta Personal",
-        "brand": "McFit",
-        "model": "Mifare Classic 1k ISO 14443-3A",
-        "price": "10 euros",
-        "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-    }
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Autenticidad NFC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .scan-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .nfc-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .scan-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .scan-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .scan-hint {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* MODAL DE RESULTADO */
+        .result-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .result-modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            animation: modalSlideIn 0.3s ease forwards;
+        }
+
+        @keyframes modalSlideIn {
+            to { transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 30px 30px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header.error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .product-info {
+            text-align: left;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .modal-footer {
+            padding: 20px 30px 30px;
+            text-align: center;
+        }
+
+        .close-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* ESTADO DE ESCANEANDO */
+        .scanning-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .scanning-overlay.show {
+            display: flex;
+        }
+
+        .scanning-animation {
+            width: 100px;
+            height: 100px;
+            border: 3px solid transparent;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .scanning-text {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .compatibility-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Verificador NFC</h1>
+            <p>Escanee la etiqueta para verificar la autenticidad</p>
+        </div>
+
+        <div class="scan-card">
+            <svg class="nfc-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="#764ba2" stroke-width="2"/>
+            </svg>
+
+            <button class="scan-button" id="scanButton">
+                📱 Escanear Etiqueta NFC
+            </button>
+
+            <div class="scan-hint">
+                Acerca su dispositivo a la etiqueta NFC del producto
+            </div>
+
+            <!-- Mensaje de incompatibilidad -->
+            <div class="compatibility-warning" id="compatibilityWarning" style="display: none;">
+                ⚠️ Este navegador no soporta NFC. Use Chrome para Android.
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay de escaneando -->
+    <div class="scanning-overlay" id="scanningOverlay">
+        <div class="scanning-animation"></div>
+        <div class="scanning-text">Escaneando...</div>
+        <div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">Tiempo restante: <span id="countdown">10</span>s</div>
+    </div>
+
+    <!-- Modal de resultado -->
+    <div class="result-modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader">
+                <div class="modal-icon" id="modalIcon">✅</div>
+                <div class="modal-title" id="modalTitle">Producto Auténtico</div>
+                <div class="modal-subtitle" id="modalSubtitle">Verificación exitosa</div>
+            </div>
+            <div class="modal-body">
+                <div class="product-info" id="productInfo">
+                    <!-- La información del producto se insertará aquí -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="close-button" id="closeButton">Escanear Otro Producto</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de datos de productos - SE CARGA DESDE ARCHIVO EXTERNO
+        let productsDB = {};
+        const DB_URL = 'productos.json';
+
+        // Elementos del DOM
+        const scanButton = document.getElementById('scanButton');
+        const scanningOverlay = document.getElementById('scanningOverlay');
+        const resultModal = document.getElementById('resultModal');
+        const modalHeader = document.getElementById('modalHeader');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSubtitle = document.getElementById('modalSubtitle');
+        const productInfo = document.getElementById('productInfo');
+        const closeButton = document.getElementById('closeButton');
+        const compatibilityWarning = document.getElementById('compatibilityWarning');
+        const countdownElement = document.getElementById('countdown');
+
+        let scanTimeout;
+
+        // Cargar base de datos desde JSON externo
+        async function loadDatabase() {
+            try {
+                const response = await fetch(DB_URL);
+                if (!response.ok) {
+                    throw new Error('No se pudo cargar la base de datos');
+                }
+                productsDB = await response.json();
+                console.log('✅ Base de datos cargada correctamente');
+            } catch (error) {
+                console.error('❌ Error cargando la base de datos:', error);
+                productsDB = {}; // Base de datos vacía si hay error
+            }
+        }
+
+        // Verificar compatibilidad
+        function checkCompatibility() {
+            if (!('NDEFReader' in window)) {
+                scanButton.disabled = true;
+                scanButton.style.background = '#6c757d';
+                scanButton.innerHTML = '❌ NFC No Soportado';
+                compatibilityWarning.style.display = 'block';
+                return false;
+            }
+            return true;
+        }
+
+        // Función para normalizar el ID NFC
+        function normalizeNFCId(id) {
+            return id.toString()
+                .toUpperCase()
+                .replace(/[^0-9A-F]/g, '')
+                .trim();
+        }
+
+        // Buscar producto en la base de datos
+        function findProduct(nfcId) {
+            const formatsToTry = [
+                nfcId,
+                normalizeNFCId(nfcId),
+                nfcId.toUpperCase(),
+                nfcId.toLowerCase(),
+                nfcId.replace(/:/g, ''),
+                nfcId.replace(/-/g, ''),
+                nfcId.replace(/\s/g, '')
+            ];
+
+            for (let format of formatsToTry) {
+                if (productsDB[format]) {
+                    console.log('✅ Producto encontrado:', format);
+                    return productsDB[format];
+                }
+            }
+            
+            console.log('❌ Producto NO encontrado:', nfcId);
+            return null;
+        }
+
+        // Contador regresivo
+        function startCountdown() {
+            let timeLeft = 10;
+            countdownElement.textContent = timeLeft;
+            
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+            
+            return countdownInterval;
+        }
+
+        // Iniciar escaneo NFC real
+        async function startRealScan() {
+            try {
+                showScanning(true);
+                const countdownInterval = startCountdown();
+                
+                const ndef = new NDEFReader();
+                await ndef.scan();
+
+                // Timeout de 10 segundos
+                scanTimeout = setTimeout(() => {
+                    clearInterval(countdownInterval);
+                    showScanning(false);
+                    resetScanButton();
+                }, 10000);
+
+                ndef.onreading = (event) => {
+                    clearTimeout(scanTimeout);
+                    clearInterval(countdownInterval);
+                    const serialNumber = event.serialNumber;
+                    console.log('📱 NFC detectado:', serialNumber);
+                    processNFCTag(serialNumber);
+                };
+
+                ndef.onreadingerror = () => {
+                    clearTimeout(scanTimeout);
+                    clearInterval(countdownInterval);
+                    showScanning(false);
+                    resetScanButton();
+                };
+
+            } catch (error) {
+                clearTimeout(scanTimeout);
+                showScanning(false);
+                resetScanButton();
+            }
+        }
+
+        // Procesar el tag NFC
+        function processNFCTag(serialNumber) {
+            showScanning(false);
+            
+            const product = findProduct(serialNumber);
+            
+            if (product) {
+                showResult(true, product, serialNumber);
+            } else {
+                showResult(false, null, serialNumber);
+            }
+        }
+
+        // Mostrar overlay de escaneando
+        function showScanning(show) {
+            if (show) {
+                scanningOverlay.classList.add('show');
+                scanButton.disabled = true;
+            } else {
+                scanningOverlay.classList.remove('show');
+            }
+        }
+
+        // Mostrar resultado en modal
+        function showResult(isAuthentic, product, nfcId) {
+            if (isAuthentic) {
+                // PRODUCTO AUTÉNTICO
+                modalHeader.className = 'modal-header success';
+                modalIcon.textContent = '✅';
+                modalTitle.textContent = 'PRODUCTO AUTÉNTICO';
+                modalSubtitle.textContent = 'Verificación exitosa';
+                
+                // Llenar información del producto
+                productInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">🏷️ ID NFC:</span>
+                        <span class="info-value">${product.nfcId}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📦 Producto:</span>
+                        <span class="info-value">${product.name}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🏢 Marca:</span>
+                        <span class="info-value">${product.brand}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🎨 Modelo:</span>
+                        <span class="info-value">${product.model}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">💰 Precio:</span>
+                        <span class="info-value">${product.price}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📝 Descripción:</span>
+                        <span class="info-value">${product.description}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🕐 Verificado:</span>
+                        <span class="info-value">${new Date().toLocaleString('es-ES')}</span>
+                    </div>
+                `;
+            } else {
+                // PRODUCTO NO AUTÉNTICO
+                modalHeader.className = 'modal-header error';
+                modalIcon.textContent = '❌';
+                modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
+                modalSubtitle.textContent = 'Advertencia de seguridad';
+                
+                productInfo.innerHTML = `
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                        <div style="color: #d32f2f; font-weight: bold; margin-bottom: 10px;">
+                            Este producto no está verificado
+                        </div>
+                        <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                            El ID NFC <strong>${nfcId}</strong> no corresponde a ningún producto auténtico.
+                        </div>
+                        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 14px;">
+                            <strong>Recomendación:</strong> No compre este producto. Podría ser una falsificación.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultModal.classList.add('show');
+        }
+
+        // Reiniciar botón de escaneo
+        function resetScanButton() {
+            scanButton.disabled = false;
+            scanButton.textContent = '📱 Escanear Etiqueta NFC';
+        }
+
+        // Event Listeners
+        scanButton.addEventListener('click', async () => {
+            // Asegurarse de que la base de datos esté cargada
+            if (Object.keys(productsDB).length === 0) {
+                await loadDatabase();
+            }
+            
+            if ('NDEFReader' in window) {
+                startRealScan();
+            }
+        });
+
+        closeButton.addEventListener('click', () => {
+            resultModal.classList.remove('show');
+            resetScanButton();
+        });
+
+        // Cerrar modal al hacer clic fuera
+        resultModal.addEventListener('click', (e) => {
+            if (e.target === resultModal) {
+                resultModal.classList.remove('show');
+                resetScanButton();
+            }
+        });
+
+        // Inicializar - Cargar base de datos al inicio
+        loadDatabase();
+        checkCompatibility();
+    </script>
+</body>
+</html>
+
