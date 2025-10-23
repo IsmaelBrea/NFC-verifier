@@ -317,31 +317,92 @@
     </div>
 
     <script>
-        // Base de datos de productos
+        // Base de datos de productos - VERSIÓN MEJORADA
         const productsDB = {
-            "04:5A:2B:8C:1D:9E:3F:80": {
-                name: "Zapatillas Deportivas Pro",
-                brand: "SportBrand",
-                model: "Runner-X2024",
-                price: "$129.99",
-                category: "Calzado Deportivo",
-                serial: "SN-2024-ZP-001"
+            // Formato 1: Con separadores
+            "04:E1:23:45:67:89:00": {
+                "nfcId": "04:E1:23:45:67:89:00",
+                "name": "Bolso Premium",
+                "brand": "Bolsalia",
+                "model": "Clásico 2024",
+                "price": "299.99€",
+                "description": "Bolso de cuero genuino"
             },
-            "05:6B:3C:9D:2E:AF:40:91": {
-                name: "Bolso Elegante Cuero",
-                brand: "FashionCo",
-                model: "Urban-Bag Premium",
-                price: "$89.99",
-                category: "Accesorios",
-                serial: "SN-2024-BL-002"
+            "04:A2:B3:C4:D5:E6:F7": {
+                "nfcId": "04:A2:B3:C4:D5:E6:F7",
+                "name": "Bolso Deluxe",
+                "brand": "Bolsalia",
+                "model": "Elegance Pro",
+                "price": "499.99€",
+                "description": "Edición limitada"
             },
-            "06:7C:4D:AE:3F:B0:51:A2": {
-                name: "Reloj Deportivo Inteligente",
-                brand: "TechWear",
-                model: "SmartFit Pro",
-                price: "$199.99",
-                category: "Tecnología",
-                serial: "SN-2024-RL-003"
+            "CD:F4:9A:EA": {
+                "nfcId": "CD:F4:9A:EA",
+                "name": "Tarjeta Personal",
+                "brand": "McFit",
+                "model": "Mifare Classic 1k ISO 14443-3A",
+                "price": "10 euros",
+                "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
+            },
+            "04:MC:FI:T1:23:45:00": {
+                "nfcId": "04:MC:FI:T1:23:45:00",
+                "name": "Producto Especial",
+                "brand": "Marca Exclusiva",
+                "model": "Edición Limitada",
+                "price": "199.99€",
+                "description": "Producto de alta gama con certificación NFC"
+            },
+            
+            // Formato 2: Sin separadores (por si el escáner los quita)
+            "04E12345678900": {
+                "nfcId": "04:E1:23:45:67:89:00",
+                "name": "Bolso Premium",
+                "brand": "Bolsalia",
+                "model": "Clásico 2024",
+                "price": "299.99€",
+                "description": "Bolso de cuero genuino"
+            },
+            "04A2B3C4D5E6F7": {
+                "nfcId": "04:A2:B3:C4:D5:E6:F7",
+                "name": "Bolso Deluxe",
+                "brand": "Bolsalia",
+                "model": "Elegance Pro",
+                "price": "499.99€",
+                "description": "Edición limitada"
+            },
+            "CDF49AEA": {
+                "nfcId": "CD:F4:9A:EA",
+                "name": "Tarjeta Personal",
+                "brand": "McFit",
+                "model": "Mifare Classic 1k ISO 14443-3A",
+                "price": "10 euros",
+                "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
+            },
+            "04MCFIT1234500": {
+                "nfcId": "04:MC:FI:T1:23:45:00",
+                "name": "Producto Especial",
+                "brand": "Marca Exclusiva",
+                "model": "Edición Limitada",
+                "price": "199.99€",
+                "description": "Producto de alta gama con certificación NFC"
+            },
+            
+            // Formato 3: En minúsculas
+            "cd:f4:9a:ea": {
+                "nfcId": "CD:F4:9A:EA",
+                "name": "Tarjeta Personal",
+                "brand": "McFit",
+                "model": "Mifare Classic 1k ISO 14443-3A",
+                "price": "10 euros",
+                "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
+            },
+            "cdf49aea": {
+                "nfcId": "CD:F4:9A:EA",
+                "name": "Tarjeta Personal",
+                "brand": "McFit",
+                "model": "Mifare Classic 1k ISO 14443-3A",
+                "price": "10 euros",
+                "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
             }
         };
 
@@ -366,6 +427,41 @@
             return true;
         }
 
+        // Función para normalizar el ID NFC (elimina espacios, convierte a mayúsculas, etc.)
+        function normalizeNFCId(id) {
+            return id.toString()
+                .toUpperCase()
+                .replace(/[^0-9A-F]/g, '')  // Elimina todo excepto números y A-F
+                .trim();
+        }
+
+        // Buscar producto en la base de datos (versión flexible)
+        function findProduct(nfcId) {
+            // Intentar diferentes formatos de búsqueda
+            const formatsToTry = [
+                nfcId,  // Formato original
+                normalizeNFCId(nfcId),  // Sin separadores
+                nfcId.toUpperCase(),  // Mayúsculas
+                nfcId.toLowerCase(),  // Minúsculas
+                nfcId.replace(/:/g, ''),  // Sin dos puntos
+                nfcId.replace(/-/g, ''),  // Sin guiones
+                nfcId.replace(/\s/g, '')  // Sin espacios
+            ];
+
+            console.log('Buscando ID:', nfcId);
+            console.log('Formatos a probar:', formatsToTry);
+
+            for (let format of formatsToTry) {
+                if (productsDB[format]) {
+                    console.log('✅ Producto encontrado con formato:', format);
+                    return productsDB[format];
+                }
+            }
+            
+            console.log('❌ Producto NO encontrado');
+            return null;
+        }
+
         // Iniciar escaneo NFC real
         async function startRealScan() {
             try {
@@ -376,6 +472,7 @@
 
                 ndef.onreading = (event) => {
                     const serialNumber = event.serialNumber;
+                    console.log('📱 NFC detectado:', serialNumber);
                     processNFCTag(serialNumber);
                 };
 
@@ -402,14 +499,8 @@
             showScanning(true);
             
             setTimeout(() => {
-                const ids = Object.keys(productsDB);
-                // 70% probabilidad de producto válido, 30% de inválido
-                if (Math.random() > 0.3) {
-                    const randomId = ids[Math.floor(Math.random() * ids.length)];
-                    processNFCTag(randomId);
-                } else {
-                    processNFCTag("00:11:22:33:44:55:66:77");
-                }
+                // En demo, probamos específicamente con CD:F4:9A:EA
+                processNFCTag("CD:F4:9A:EA");
             }, 2000);
         }
 
@@ -417,15 +508,12 @@
         function processNFCTag(serialNumber) {
             showScanning(false);
             
-            const nfcId = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':')
-                .replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
-            
-            const product = productsDB[nfcId];
+            const product = findProduct(serialNumber);
             
             if (product) {
-                showResult(true, product, nfcId);
+                showResult(true, product, serialNumber);
             } else {
-                showResult(false, null, nfcId);
+                showResult(false, null, serialNumber);
             }
         }
 
@@ -451,7 +539,7 @@
                 productInfo.innerHTML = `
                     <div class="info-item">
                         <span class="info-label">🏷️ ID NFC:</span>
-                        <span class="info-value">${nfcId}</span>
+                        <span class="info-value">${product.nfcId}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">📦 Producto:</span>
@@ -470,12 +558,8 @@
                         <span class="info-value">${product.price}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">📋 Categoría:</span>
-                        <span class="info-value">${product.category}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🔢 Serial:</span>
-                        <span class="info-value">${product.serial}</span>
+                        <span class="info-label">📝 Descripción:</span>
+                        <span class="info-value">${product.description}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">🕐 Verificado:</span>
@@ -496,7 +580,7 @@
                             Este producto no está verificado
                         </div>
                         <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
-                            El ID NFC <strong>${nfcId}</strong> no corresponde a ningún producto auténtico en nuestra base de datos.
+                            El ID NFC <strong>${nfcId}</strong> no corresponde a ningún producto auténtico.
                         </div>
                         <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 14px;">
                             <strong>Recomendación:</strong> No compre este producto. Podría ser una falsificación.
