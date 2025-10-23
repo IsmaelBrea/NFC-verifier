@@ -364,7 +364,7 @@
                 console.log('✅ Base de datos cargada correctamente');
             } catch (error) {
                 console.error('❌ Error cargando la base de datos:', error);
-                productsDB = {}; // Base de datos vacía si hay error
+                productsDB = {};
             }
         }
 
@@ -402,12 +402,9 @@
 
             for (let format of formatsToTry) {
                 if (productsDB[format]) {
-                    console.log('✅ Producto encontrado:', format);
                     return productsDB[format];
                 }
             }
-            
-            console.log('❌ Producto NO encontrado:', nfcId);
             return null;
         }
 
@@ -441,9 +438,9 @@
                 const ndef = new NDEFReader();
                 await ndef.scan();
 
-                // Timeout de 10 segundos - SOLO VUELVE SILENCIOSAMENTE SI NO SE DETECTA NADA
+                // Timeout de 10 segundos
                 scanTimeout = setTimeout(() => {
-                    console.log('⏰ Timeout - No se detectó NFC, volviendo silenciosamente');
+                    console.log('⏰ Timeout - No se detectó NFC');
                     clearScanning();
                     showScanning(false);
                     resetScanButton();
@@ -458,35 +455,49 @@
 
                 ndef.onreadingerror = () => {
                     clearScanning();
-                    console.log('❌ Error leyendo NFC');
                     showScanning(false);
                     resetScanButton();
                 };
 
             } catch (error) {
                 clearScanning();
-                console.log('❌ Error en escaneo:', error);
                 showScanning(false);
                 resetScanButton();
             }
         }
 
-        // Procesar el tag NFC - CORREGIDO
+        // Procesar el tag NFC - VERSIÓN QUE SÍ FUNCIONABA
         function processNFCTag(serialNumber) {
-            console.log('🔄 Procesando tag NFC:', serialNumber);
             showScanning(false);
             
-            const product = findProduct(serialNumber);
-            
-            console.log('📊 Resultado búsqueda:', product ? 'ENCONTRADO' : 'NO ENCONTRADO');
-            
+            const nfcIdKey = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
+            const product = productsDB[nfcIdKey];
+
+            console.log('Buscando:', nfcIdKey, 'Encontrado:', !!product);
+
             if (product) {
-                console.log('🎯 Mostrando producto AUTÉNTICO');
-                showResult(true, product, serialNumber);
+                // PRODUCTO AUTÉNTICO
+                showStatus('✅ Producto Auténtico Verificado', 'success');
+                productInfoTitle.textContent = '✅ PRODUCTO AUTÉNTICO';
+                productInfoTitle.style.color = '#2e7d32';
+                displayProductInfo(product);
             } else {
-                console.log('🎯 Mostrando producto FALSO');
-                showResult(false, null, serialNumber);
+                // PRODUCTO NO AUTÉNTICO
+                showStatus('❌ PRODUCTO NO AUTÉNTICO', 'error');
+                productInfoTitle.textContent = '❌ PRODUCTO NO AUTÉNTICO';
+                productInfoTitle.style.color = '#dc3545';
+                
+                document.getElementById('nfcId').textContent = nfcIdKey;
+                document.getElementById('productName').textContent = 'NO REGISTRADO';
+                document.getElementById('productBrand').textContent = 'NO REGISTRADO';
+                document.getElementById('productModel').textContent = 'NO REGISTRADO';
+                document.getElementById('productPrice').textContent = 'NO REGISTRADO';
+                document.getElementById('verificationDate').textContent = new Date().toLocaleString('es-ES');
+                
+                productInfo.classList.add('show');
             }
+
+            resetScanButton();
         }
 
         // Mostrar overlay de escaneando
@@ -499,81 +510,70 @@
             }
         }
 
-        // Mostrar resultado en modal - CORREGIDO
+        // Mostrar resultado en modal - VERSIÓN SIMPLE QUE FUNCIONABA
         function showResult(isAuthentic, product, nfcId) {
-            console.log('🎪 Mostrando resultado:', isAuthentic ? 'AUTÉNTICO' : 'FALSO');
-            
-            // Asegurarse de que el modal esté oculto antes de mostrar el nuevo
-            resultModal.classList.remove('show');
-            
-            // Pequeño delay para asegurar que el DOM se actualice
-            setTimeout(() => {
-                if (isAuthentic) {
-                    // PRODUCTO AUTÉNTICO
-                    modalHeader.className = 'modal-header success';
-                    modalIcon.textContent = '✅';
-                    modalTitle.textContent = 'PRODUCTO AUTÉNTICO';
-                    modalSubtitle.textContent = 'Verificación exitosa';
-                    
-                    // Llenar información del producto
-                    productInfo.innerHTML = `
-                        <div class="info-item">
-                            <span class="info-label">🏷️ ID NFC:</span>
-                            <span class="info-value">${product.nfcId}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">📦 Producto:</span>
-                            <span class="info-value">${product.name}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">🏢 Marca:</span>
-                            <span class="info-value">${product.brand}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">🎨 Modelo:</span>
-                            <span class="info-value">${product.model}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">💰 Precio:</span>
-                            <span class="info-value">${product.price}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">📝 Descripción:</span>
-                            <span class="info-value">${product.description}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">🕐 Verificado:</span>
-                            <span class="info-value">${new Date().toLocaleString('es-ES')}</span>
-                        </div>
-                    `;
-                } else {
-                    // PRODUCTO NO AUTÉNTICO - MOSTRAR ERROR
-                    modalHeader.className = 'modal-header error';
-                    modalIcon.textContent = '❌';
-                    modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
-                    modalSubtitle.textContent = 'Advertencia de seguridad';
-                    
-                    productInfo.innerHTML = `
-                        <div style="text-align: center; padding: 20px 0;">
-                            <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
-                            <div style="color: #d32f2f; font-weight: bold; margin-bottom: 10px;">
-                                Este producto no está verificado
-                            </div>
-                            <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
-                                El ID NFC <strong>${nfcId}</strong> no corresponde a ningún producto auténtico.
-                            </div>
-                            <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 14px;">
-                                <strong>Recomendación:</strong> No compre este producto. Podría ser una falsificación.
-                            </div>
-                        </div>
-                    `;
-                }
+            if (isAuthentic) {
+                // PRODUCTO AUTÉNTICO
+                modalHeader.className = 'modal-header success';
+                modalIcon.textContent = '✅';
+                modalTitle.textContent = 'PRODUCTO AUTÉNTICO';
+                modalSubtitle.textContent = 'Verificación exitosa';
                 
-                // MOSTRAR EL MODAL
-                console.log('🪟 Mostrando modal...');
-                resultModal.classList.add('show');
+                productInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">🏷️ ID NFC:</span>
+                        <span class="info-value">${product.nfcId}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📦 Producto:</span>
+                        <span class="info-value">${product.name}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🏢 Marca:</span>
+                        <span class="info-value">${product.brand}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🎨 Modelo:</span>
+                        <span class="info-value">${product.model}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">💰 Precio:</span>
+                        <span class="info-value">${product.price}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">📝 Descripción:</span>
+                        <span class="info-value">${product.description}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">🕐 Verificado:</span>
+                        <span class="info-value">${new Date().toLocaleString('es-ES')}</span>
+                    </div>
+                `;
+            } else {
+                // PRODUCTO NO AUTÉNTICO
+                modalHeader.className = 'modal-header error';
+                modalIcon.textContent = '❌';
+                modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
+                modalSubtitle.textContent = 'Advertencia de seguridad';
                 
-            }, 10);
+                productInfo.innerHTML = `
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+                        <div style="color: #d32f2f; font-weight: bold; margin-bottom: 10px;">
+                            Este producto no está verificado
+                        </div>
+                        <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                            El ID NFC <strong>${nfcId}</strong> no corresponde a ningún producto auténtico.
+                        </div>
+                        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 14px;">
+                            <strong>Recomendación:</strong> No compre este producto. Podría ser una falsificación.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // ESTA ES LA LÍNEA CLAVE QUE FALTABA
+            resultModal.classList.add('show');
         }
 
         // Reiniciar botón de escaneo
@@ -584,7 +584,6 @@
 
         // Event Listeners
         scanButton.addEventListener('click', async () => {
-            // Asegurarse de que la base de datos esté cargada
             if (Object.keys(productsDB).length === 0) {
                 await loadDatabase();
             }
@@ -599,7 +598,6 @@
             resetScanButton();
         });
 
-        // Cerrar modal al hacer clic fuera
         resultModal.addEventListener('click', (e) => {
             if (e.target === resultModal) {
                 resultModal.classList.remove('show');
@@ -607,11 +605,10 @@
             }
         });
 
-        // Inicializar - Cargar base de datos al inicio
+        // Inicializar
         loadDatabase();
         checkCompatibility();
     </script>
 </body>
 </html>
-
 
