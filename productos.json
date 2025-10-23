@@ -22,6 +22,13 @@
         "model": "Mifare Classic 1k ISO 14443-3A",
         "price": "10 euros",
         "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-   
+    },
+    "04:MC:FI:T1:23:45:00": {
+        "nfcId": "04:MC:FI:T1:23:45:00",
+        "name": "Producto Especial",
+        "brand": "Marca Exclusiva",
+        "model": "Edición Limitada",
+        "price": "199.99€",
+        "description": "Producto de alta gama con certificación NFC"
+    }
 }
-
