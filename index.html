@@ -351,6 +351,7 @@
         const countdownElement = document.getElementById('countdown');
 
         let scanTimeout;
+        let countdownInterval;
 
         // Cargar base de datos desde JSON externo
         async function loadDatabase() {
@@ -415,7 +416,7 @@
             let timeLeft = 10;
             countdownElement.textContent = timeLeft;
             
-            const countdownInterval = setInterval(() => {
+            countdownInterval = setInterval(() => {
                 timeLeft--;
                 countdownElement.textContent = timeLeft;
                 
@@ -423,43 +424,48 @@
                     clearInterval(countdownInterval);
                 }
             }, 1000);
-            
-            return countdownInterval;
+        }
+
+        // Limpiar timeout y contador
+        function clearScanning() {
+            clearTimeout(scanTimeout);
+            clearInterval(countdownInterval);
         }
 
         // Iniciar escaneo NFC real
         async function startRealScan() {
             try {
                 showScanning(true);
-                const countdownInterval = startCountdown();
+                startCountdown();
                 
                 const ndef = new NDEFReader();
                 await ndef.scan();
 
-                // Timeout de 10 segundos
+                // Timeout de 10 segundos - SOLO VUELVE SILENCIOSAMENTE SI NO SE DETECTA NADA
                 scanTimeout = setTimeout(() => {
-                    clearInterval(countdownInterval);
+                    console.log('⏰ Timeout - No se detectó NFC');
+                    clearScanning();
                     showScanning(false);
                     resetScanButton();
                 }, 10000);
 
                 ndef.onreading = (event) => {
-                    clearTimeout(scanTimeout);
-                    clearInterval(countdownInterval);
+                    clearScanning();
                     const serialNumber = event.serialNumber;
                     console.log('📱 NFC detectado:', serialNumber);
                     processNFCTag(serialNumber);
                 };
 
                 ndef.onreadingerror = () => {
-                    clearTimeout(scanTimeout);
-                    clearInterval(countdownInterval);
+                    clearScanning();
+                    console.log('❌ Error leyendo NFC');
                     showScanning(false);
                     resetScanButton();
                 };
 
             } catch (error) {
-                clearTimeout(scanTimeout);
+                clearScanning();
+                console.log('❌ Error en escaneo:', error);
                 showScanning(false);
                 resetScanButton();
             }
@@ -474,6 +480,7 @@
             if (product) {
                 showResult(true, product, serialNumber);
             } else {
+                // TARJETA FALSA - MOSTRAR MODAL DE ERROR
                 showResult(false, null, serialNumber);
             }
         }
@@ -529,7 +536,7 @@
                     </div>
                 `;
             } else {
-                // PRODUCTO NO AUTÉNTICO
+                // PRODUCTO NO AUTÉNTICO - MOSTRAR ERROR
                 modalHeader.className = 'modal-header error';
                 modalIcon.textContent = '❌';
                 modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
