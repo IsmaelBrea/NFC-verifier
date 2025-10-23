@@ -116,7 +116,7 @@
         }
 
         .result-modal.show {
-            display: flex;
+            display: flex !important;
             animation: fadeIn 0.3s ease;
         }
 
@@ -310,7 +310,7 @@
     <div class="scanning-overlay" id="scanningOverlay">
         <div class="scanning-animation"></div>
         <div class="scanning-text">Escaneando...</div>
-        <div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">Tiempo restante: <span id="countdown">10</span>s</div>
+        <div style="margin-top: 10px; font-size: 14px; opacity: 0.8;">Acerca la tarjeta NFC</div>
     </div>
 
     <!-- Modal de resultado -->
@@ -333,7 +333,7 @@
     </div>
 
     <script>
-        // Base de datos de productos - SE CARGA DESDE ARCHIVO EXTERNO
+        // Base de datos de productos
         let productsDB = {};
         const DB_URL = 'productos.json';
 
@@ -348,11 +348,9 @@
         const productInfo = document.getElementById('productInfo');
         const closeButton = document.getElementById('closeButton');
         const compatibilityWarning = document.getElementById('compatibilityWarning');
-        const countdownElement = document.getElementById('countdown');
 
-        let scanTimeout;
-        let countdownInterval;
         let ndefReader = null;
+        let isScanning = false;
 
         // Cargar base de datos desde JSON externo
         async function loadDatabase() {
@@ -362,11 +360,10 @@
                     throw new Error('No se pudo cargar la base de datos');
                 }
                 productsDB = await response.json();
-                console.log('✅ Base de datos cargada correctamente');
-                console.log('📦 Productos en BD:', Object.keys(productsDB));
+                console.log('✅ Base de datos cargada:', productsDB);
             } catch (error) {
-                console.error('❌ Error cargando la base de datos:', error);
-                productsDB = {}; // Base de datos vacía si hay error
+                console.error('❌ Error cargando BD:', error);
+                productsDB = {};
             }
         }
 
@@ -382,155 +379,54 @@
             return true;
         }
 
-        // Función para normalizar el ID NFC
-        function normalizeNFCId(id) {
-            return id.toString()
-                .toUpperCase()
-                .replace(/[^0-9A-F]/g, '')
-                .trim();
-        }
-
         // Buscar producto en la base de datos
         function findProduct(nfcId) {
-            console.log('🔍 Buscando producto con ID:', nfcId);
+            console.log('🔍 Buscando ID:', nfcId);
+            console.log('📦 IDs en BD:', Object.keys(productsDB));
             
-            const formatsToTry = [
+            // Probar diferentes formatos
+            const formats = [
                 nfcId,
-                normalizeNFCId(nfcId),
                 nfcId.toUpperCase(),
                 nfcId.toLowerCase(),
                 nfcId.replace(/:/g, ''),
                 nfcId.replace(/-/g, ''),
-                nfcId.replace(/\s/g, '')
+                nfcId.replace(/\s/g, ''),
+                nfcId.toUpperCase().replace(/:/g, ''),
+                nfcId.toUpperCase().replace(/-/g, '')
             ];
 
-            console.log('🔍 Formatos a buscar:', formatsToTry);
-
-            for (let format of formatsToTry) {
+            for (let format of formats) {
                 if (productsDB[format]) {
-                    console.log('✅ Producto encontrado con formato:', format);
+                    console.log('✅ ENCONTRADO con formato:', format);
                     return productsDB[format];
                 }
             }
             
-            console.log('❌ Producto NO encontrado en ningún formato');
+            console.log('❌ NO ENCONTRADO');
             return null;
-        }
-
-        // Contador regresivo
-        function startCountdown() {
-            let timeLeft = 10;
-            countdownElement.textContent = timeLeft;
-            
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                countdownElement.textContent = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                }
-            }, 1000);
-        }
-
-        // Limpiar timeout y contador
-        function clearScanning() {
-            if (scanTimeout) {
-                clearTimeout(scanTimeout);
-                scanTimeout = null;
-            }
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-            }
-        }
-
-        // Iniciar escaneo NFC real
-        async function startRealScan() {
-            try {
-                showScanning(true);
-                startCountdown();
-                
-                ndefReader = new NDEFReader();
-                await ndefReader.scan();
-
-                console.log('✅ Escaneo NFC iniciado');
-
-                // Timeout de 10 segundos - SOLO VUELVE SI NO SE DETECTA NADA
-                scanTimeout = setTimeout(() => {
-                    console.log('⏰ Timeout - No se detectó ninguna tarjeta NFC');
-                    clearScanning();
-                    showScanning(false);
-                    resetScanButton();
-                }, 10000);
-
-                // IMPORTANTE: Usar onreading en lugar de addEventListener
-                ndefReader.onreading = (event) => {
-                    console.log('📱 ¡NFC DETECTADO!');
-                    clearScanning();
-                    const serialNumber = event.serialNumber;
-                    console.log('🔢 Serial Number:', serialNumber);
-                    
-                    // Procesar inmediatamente
-                    processNFCTag(serialNumber);
-                };
-
-                ndefReader.onreadingerror = (error) => {
-                    console.log('❌ Error leyendo NFC:', error);
-                    clearScanning();
-                    showScanning(false);
-                    resetScanButton();
-                };
-
-            } catch (error) {
-                console.error('❌ Error en escaneo:', error);
-                clearScanning();
-                showScanning(false);
-                resetScanButton();
-            }
-        }
-
-        // Procesar el tag NFC - CORREGIDO
-        function processNFCTag(serialNumber) {
-            console.log('🔄 Procesando tag NFC:', serialNumber);
-            
-            // Ocultar overlay de escaneando
-            showScanning(false);
-            
-            // Buscar producto
-            const product = findProduct(serialNumber);
-            
-            if (product) {
-                console.log('✅ PRODUCTO AUTÉNTICO encontrado');
-                showResult(true, product, serialNumber);
-            } else {
-                console.log('❌ PRODUCTO NO ENCONTRADO - Mostrando error');
-                // IMPORTANTE: Siempre mostrar el modal de error
-                showResult(false, null, serialNumber);
-            }
         }
 
         // Mostrar overlay de escaneando
         function showScanning(show) {
-            if (show) {
-                scanningOverlay.classList.add('show');
-                scanButton.disabled = true;
-            } else {
-                scanningOverlay.classList.remove('show');
-            }
+            scanningOverlay.style.display = show ? 'flex' : 'none';
+            scanButton.disabled = show;
         }
 
-        // Mostrar resultado en modal - CORREGIDO
+        // FUNCIÓN CRÍTICA: Mostrar resultado
         function showResult(isAuthentic, product, nfcId) {
-            console.log('📊 Mostrando resultado:', isAuthentic ? 'AUTÉNTICO' : 'FALSO');
+            console.log('🎭 MOSTRANDO RESULTADO:', isAuthentic ? 'AUTÉNTICO' : 'FALSO');
+            
+            // Ocultar overlay de escaneando
+            showScanning(false);
             
             if (isAuthentic && product) {
-                // PRODUCTO AUTÉNTICO
+                // ========== PRODUCTO AUTÉNTICO ==========
                 modalHeader.className = 'modal-header success';
                 modalIcon.textContent = '✅';
                 modalTitle.textContent = 'PRODUCTO AUTÉNTICO';
                 modalSubtitle.textContent = 'Verificación exitosa';
                 
-                // Llenar información del producto
                 productInfo.innerHTML = `
                     <div class="info-item">
                         <span class="info-label">🏷️ ID NFC:</span>
@@ -562,81 +458,149 @@
                     </div>
                 `;
             } else {
-                // PRODUCTO NO AUTÉNTICO - MOSTRAR ERROR
-                console.log('⚠️ Construyendo pantalla de error');
+                // ========== PRODUCTO FALSO ==========
+                console.log('⚠️ CONSTRUYENDO PANTALLA DE ERROR');
                 
                 modalHeader.className = 'modal-header error';
                 modalIcon.textContent = '❌';
                 modalTitle.textContent = 'PRODUCTO NO AUTÉNTICO';
-                modalSubtitle.textContent = 'Advertencia de seguridad';
+                modalSubtitle.textContent = '⚠️ Advertencia de Seguridad';
                 
                 productInfo.innerHTML = `
                     <div style="text-align: center; padding: 20px 0;">
-                        <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
-                        <div style="color: #d32f2f; font-weight: bold; font-size: 18px; margin-bottom: 15px;">
-                            Este producto NO está verificado
+                        <div style="font-size: 80px; margin-bottom: 20px;">🚫</div>
+                        <div style="color: #d32f2f; font-weight: bold; font-size: 20px; margin-bottom: 15px;">
+                            PRODUCTO NO VERIFICADO
                         </div>
                         <div style="color: #666; font-size: 14px; margin-bottom: 20px; line-height: 1.6;">
-                            El ID NFC escaneado no corresponde a ningún producto auténtico registrado en nuestra base de datos.
+                            La tarjeta NFC escaneada NO está registrada en nuestra base de datos oficial.
                         </div>
-                        <div style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 10px; border: 2px solid #f44336; margin-bottom: 15px;">
-                            <strong>🔒 ID NFC:</strong><br>
-                            <code style="font-size: 12px; word-break: break-all;">${nfcId}</code>
+                        <div style="background: #ffebee; color: #c62828; padding: 20px; border-radius: 10px; border: 2px solid #f44336; margin-bottom: 15px;">
+                            <strong style="font-size: 16px;">🔒 ID NFC Escaneado:</strong><br><br>
+                            <code style="font-size: 13px; word-break: break-all; background: white; padding: 10px; display: block; border-radius: 5px;">${nfcId}</code>
                         </div>
-                        <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 14px; text-align: left;">
-                            <strong>⚠️ Recomendación:</strong><br>
-                            • No compre este producto<br>
-                            • Podría ser una falsificación<br>
-                            • Contacte al vendedor oficial
+                        <div style="background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; font-size: 14px; text-align: left; line-height: 1.8;">
+                            <strong style="font-size: 16px;">⚠️ RECOMENDACIONES:</strong><br><br>
+                            • NO compre este producto<br>
+                            • Es posible que sea FALSO<br>
+                            • Contacte con el vendedor oficial<br>
+                            • Reporte esta incidencia
                         </div>
                     </div>
                 `;
             }
             
-            // MOSTRAR EL MODAL
-            console.log('🎭 Mostrando modal');
+            // FORZAR LA VISUALIZACIÓN DEL MODAL
+            console.log('🎯 FORZANDO APERTURA DEL MODAL');
+            resultModal.style.display = 'flex';
             resultModal.classList.add('show');
+            
+            // Resetear el botón
+            setTimeout(() => {
+                scanButton.disabled = false;
+                scanButton.textContent = '📱 Escanear Etiqueta NFC';
+            }, 500);
         }
 
-        // Reiniciar botón de escaneo
-        function resetScanButton() {
-            scanButton.disabled = false;
-            scanButton.textContent = '📱 Escanear Etiqueta NFC';
+        // Procesar tag NFC
+        function processNFCTag(serialNumber) {
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('📱 TAG NFC DETECTADO');
+            console.log('🔢 Serial Number:', serialNumber);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            
+            isScanning = false;
+            
+            // Buscar producto
+            const product = findProduct(serialNumber);
+            
+            // SIEMPRE mostrar resultado, sea encontrado o no
+            setTimeout(() => {
+                if (product) {
+                    console.log('✅ Mostrando pantalla AUTÉNTICO');
+                    showResult(true, product, serialNumber);
+                } else {
+                    console.log('❌ Mostrando pantalla ERROR');
+                    showResult(false, null, serialNumber);
+                }
+            }, 100);
+        }
+
+        // Iniciar escaneo NFC
+        async function startNFCScan() {
+            if (isScanning) {
+                console.log('⚠️ Ya hay un escaneo en progreso');
+                return;
+            }
+
+            try {
+                console.log('🚀 INICIANDO ESCANEO NFC');
+                isScanning = true;
+                showScanning(true);
+                
+                if (!ndefReader) {
+                    ndefReader = new NDEFReader();
+                }
+                
+                await ndefReader.scan();
+                console.log('✅ Lector NFC activado');
+
+                // Configurar el evento de lectura
+                ndefReader.onreading = (event) => {
+                    if (!isScanning) return; // Evitar múltiples disparos
+                    
+                    const serialNumber = event.serialNumber;
+                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                    console.log('🎯 ¡TARJETA NFC DETECTADA!');
+                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                    
+                    processNFCTag(serialNumber);
+                };
+
+                ndefReader.onreadingerror = (error) => {
+                    console.error('❌ Error leyendo NFC:', error);
+                    isScanning = false;
+                    showScanning(false);
+                    scanButton.disabled = false;
+                };
+
+            } catch (error) {
+                console.error('❌ Error al iniciar escaneo:', error);
+                isScanning = false;
+                showScanning(false);
+                scanButton.disabled = false;
+            }
         }
 
         // Event Listeners
         scanButton.addEventListener('click', async () => {
-            console.log('🔘 Botón de escaneo presionado');
+            console.log('🔘 Botón presionado');
             
-            // Asegurarse de que la base de datos esté cargada
             if (Object.keys(productsDB).length === 0) {
                 console.log('📥 Cargando base de datos...');
                 await loadDatabase();
             }
             
             if ('NDEFReader' in window) {
-                startRealScan();
-            } else {
-                console.log('❌ NFC no soportado');
+                startNFCScan();
             }
         });
 
         closeButton.addEventListener('click', () => {
             console.log('✖️ Cerrando modal');
             resultModal.classList.remove('show');
-            resetScanButton();
+            resultModal.style.display = 'none';
         });
 
-        // Cerrar modal al hacer clic fuera
         resultModal.addEventListener('click', (e) => {
             if (e.target === resultModal) {
                 resultModal.classList.remove('show');
-                resetScanButton();
+                resultModal.style.display = 'none';
             }
         });
 
-        // Inicializar - Cargar base de datos al inicio
-        console.log('🚀 Inicializando aplicación...');
+        // Inicializar
+        console.log('🚀 Aplicación iniciada');
         loadDatabase();
         checkCompatibility();
     </script>
