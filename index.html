@@ -339,34 +339,70 @@
             }
         }
 
-       /**
-         * Función que maneja el ID NFC leído/simulado
-         * @param {string} serialNumber El ID NFC de la tarjeta (UID/Serial Number)
-         */
-       /**
-         * Función que maneja el ID NFC leído/simulado
-         * @param {string} serialNumber El ID NFC de la tarjeta (UID/Serial Number)
-         */
-        function handleNFCRead(serialNumber) {
-            // *** LÍNEA AÑADIDA PARA DIAGNÓSTICO: MUESTRA SIEMPRE LO QUE LEE ***
-            console.log('ID LEÍDO POR EL NAVEGADOR:', serialNumber); 
-            // *****************************************************************
-            
-            const nfcIdKey = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
-            const product = productsDB[nfcIdKey];
+     /**
+ * Función que maneja el ID NFC leído/simulado
+ * @param {string} serialNumber El ID NFC de la tarjeta (UID/Serial Number)
+ */
+function handleNFCRead(serialNumber) {
+    // *** LÍNEA AÑADIDA PARA DIAGNÓSTICO: MUESTRA SIEMPRE LO QUE LEE ***
+    console.log('ID LEÍDO POR EL NAVEGADOR:', serialNumber); 
+    
+    // Ocultar información de producto anterior
+    productInfo.classList.remove('show');
+    
+    // Formatear el ID para buscar en la base de datos
+    const nfcIdKey = serialNumber.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:{2,}/g, ':').replace(/^:|:$/g, '');
+    const product = productsDB[nfcIdKey];
 
-            if (product) {
-                // ... (El código de PRODUCTO AUTÉNTICO)
-                showStatus('status', '✅ Producto Auténtico Verificado', 'success');
-                // ... (resto del código de éxito)
-            } else {
-                // ... (El código de WARNING)
-                showStatus('status', '⚠️ WARNING: The tag is NOT authentic', 'error');
-                // ... (resto del código de error)
-            }
+    console.log('Buscando producto con ID:', nfcIdKey);
+    console.log('Producto encontrado:', product);
 
-            resetScanButton();
-        }
+    if (product) {
+        // PRODUCTO AUTÉNTICO
+        showStatus('status', '✅ Producto Auténtico Verificado', 'success');
+        productInfoTitle.textContent = '✅ PRODUCTO AUTÉNTICO';
+        productInfoTitle.style.color = '#2e7d32';
+        
+        // Mostrar información del producto
+        displayProductInfo(product);
+    } else {
+        // PRODUCTO NO AUTÉNTICO
+        showStatus('status', '⚠️ WARNING: El producto NO es auténtico', 'error');
+        productInfoTitle.textContent = '❌ PRODUCTO NO AUTÉNTICO';
+        productInfoTitle.style.color = '#dc3545';
+        
+        // Mostrar solo el ID escaneado
+        document.getElementById('nfcId').textContent = nfcIdKey;
+        document.getElementById('productName').textContent = 'NO REGISTRADO';
+        document.getElementById('productBrand').textContent = 'NO REGISTRADO';
+        document.getElementById('productModel').textContent = 'NO REGISTRADO';
+        document.getElementById('productPrice').textContent = 'NO REGISTRADO';
+        document.getElementById('verificationDate').textContent = new Date().toLocaleString('es-ES');
+        
+        productInfo.classList.add('show');
+    }
+
+    resetScanButton();
+}
+
+// Función auxiliar para mostrar estados
+function showStatus(elementId, message, type) {
+    const statusElement = document.getElementById(elementId);
+    statusElement.textContent = message;
+    statusElement.className = 'status show ' + type;
+}
+
+// Función para mostrar información del producto (auténtico)
+function displayProductInfo(product) {
+    document.getElementById('nfcId').textContent = product.nfcId || '-';
+    document.getElementById('productName').textContent = product.name || '-';
+    document.getElementById('productBrand').textContent = product.brand || '-';
+    document.getElementById('productModel').textContent = product.model || '-';
+    document.getElementById('productPrice').textContent = product.price || '-';
+    document.getElementById('verificationDate').textContent = new Date().toLocaleString('es-ES');
+
+    productInfo.classList.add('show');
+}
 
         function displayProductInfo(product) {
             document.getElementById('nfcId').textContent = product.nfcId || '-';
@@ -396,5 +432,6 @@
 </body>
 
 </html>
+
 
 
