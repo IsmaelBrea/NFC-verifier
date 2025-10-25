@@ -379,17 +379,6 @@
                 console.log('✅ Base de datos cargada correctamente');
             } catch (error) {
                 console.error('❌ Error cargando la base de datos:', error);
-                // Usar base de datos de respaldo si falla la carga
-                productsDB = {
-                    "CD:F4:9A:EA": {
-                        "nfcId": "CD:F4:9A:EA",
-                        "name": "Tarjeta Personal",
-                        "brand": "McFit",
-                        "model": "Mifare Classic 1k",
-                        "price": "10 euros",
-                        "description": "Tarjeta personal reprogramada"
-                    }
-                };
             }
         }
 
@@ -627,3 +616,4 @@
     </script>
 </body>
 </html>
+
