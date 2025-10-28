@@ -6,17 +6,7 @@
         "model": "Mifare Classic 1k ISO 14443-3A",
         "price": "10 euros",
         "description": "Tarjeta personal con mi enlace de git reprogramada con NFC Tools"
-    }
-
-    "04:2a:e2:82:da:18:91": {
-        "nfcId": "04:2a:e2:82:da:18:91",
-        "name": "Tarjeta Personal Diego",
-        "brand": "Tarjeta Metro Oporto",
-        "model": "Mifare Classic 1k ISO 14443-3A",
-        "price": "8 euros",
-        "description": "Tarjeta de Diego Oporto"
-    }
-    
+    }    
 }
 
 
